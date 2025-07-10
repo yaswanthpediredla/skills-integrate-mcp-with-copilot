@@ -3,15 +3,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const searchInput = document.getElementById("search-input");
+  const sortSelect = document.getElementById("sort-select");
+  // const categorySelect = document.getElementById("category-select"); // For future use
+  const filterBtn = document.getElementById("filter-btn");
 
-  // Function to fetch activities from API
+  // Function to fetch activities from API with filters
   async function fetchActivities() {
     try {
-      const response = await fetch("/activities");
+      // Build query params
+      const params = [];
+      if (searchInput && searchInput.value)
+        params.push(`search=${encodeURIComponent(searchInput.value)}`);
+      if (sortSelect && sortSelect.value)
+        params.push(`sort=${encodeURIComponent(sortSelect.value)}`);
+      // if (categorySelect && categorySelect.value) params.push(`category=${encodeURIComponent(categorySelect.value)}`);
+      const query = params.length ? `?${params.join("&")}` : "";
+      const response = await fetch(`/activities${query}`);
       const activities = await response.json();
 
-      // Clear loading message
+      // Clear loading message and dropdown
       activitiesList.innerHTML = "";
+      activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
 
       // Populate activities list
       Object.entries(activities).forEach(([name, details]) => {
@@ -154,6 +167,19 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error signing up:", error);
     }
   });
+
+  // Add event listener to filter button
+  if (filterBtn) {
+    filterBtn.addEventListener("click", () => {
+      fetchActivities();
+    });
+  }
+  // Optional: Enter key triggers search
+  if (searchInput) {
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") fetchActivities();
+    });
+  }
 
   // Initialize app
   fetchActivities();
